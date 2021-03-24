@@ -10,6 +10,7 @@ shinyUI(dashboardPage(
   skin="red",
   dashboardHeader(title="Netflix Movies and TV Shows", titleWidth=300),
   dashboardSidebar(
+    width=300,
     sidebarMenu(
       menuItem("Overview", tabName="overview", icon=icon("chart-line"))
     )
@@ -20,12 +21,13 @@ shinyUI(dashboardPage(
         tabName="overview",
         HTML('<center><img src="netflix-logo.png" width="400"></center>'),
         br(),
-        h4("Netflix, one of the most popular content platform in media industry.", style="text-align: center;"),
+        br(),
+        h2("One of the Most Popular Content Platform in the World", style="text-align: center;"),
         br(),
         fluidRow(
-          infoBoxOutput("totalMoviesBox"),
-          infoBoxOutput("totalShowsBox"),
-          infoBoxOutput("totalContentBox")
+          withSpinner(infoBoxOutput("totalMoviesBox"), color="red"),
+          withSpinner(infoBoxOutput("totalShowsBox"), color="red"),
+          withSpinner(infoBoxOutput("totalContentBox"), color="red")
         ),
         br(),
         fluidRow(

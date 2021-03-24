@@ -19,10 +19,7 @@ originalNetflix <- distinct(originalNetflix, title, country, type, release_year,
 ###################
 
 # Top 5 country
-topCountry <- na.omit(originalNetflix) %>% group_by(country, type) %>% summarise(count=n())
-totalByCountry <- aggregate(topCountry$count, by=list(country=topCountry$country), FUN=sum) %>% arrange(desc(x)) %>% top_n(5)
-names(totalByCountry)[2] <- "count"
-totalByCountry <- totalByCountry[order(desc(totalByCountry$count)),]
+topCountry <- na.omit(originalNetflix) %>% group_by(country) %>% summarise(count=n()) %>% arrange(desc(count)) %>% top_n(5)
 
 # Growth in content
 totalContent <- originalNetflix %>% group_by(date_added) %>% summarise(addedToday=n()) %>%
@@ -44,10 +41,15 @@ show <- filter(totalMovies, type == "TV Show")
 shinyServer(function(input, output) {
   # Top country
   output$topCountryBar <- renderPlot({
-    country <- ggplot(totalByCountry, aes(x=reorder(country, -count), y=count)) +
-      geom_bar(stat="identity", color="skyblue", fill="steelblue") + 
+    country <- ggplot(topCountry, aes(x=reorder(country, -count), y=count, fill=country)) +
+      geom_bar(stat="identity", show.legend=FALSE) + 
+      scale_fill_hue(c=40) +
       labs(x="Country", y="Total Contents", title="Top Countries By Amount of Content Produced") +
-      theme(axis.text=element_text(size=12), axis.title=element_text(size=15), plot.title=element_text(size=16))
+      theme(axis.text=element_text(size=12), 
+            plot.title=element_text(size=18, margin=margin(0,0,20,0), hjust=0.5),
+            axis.title.x=element_text(margin=margin(20,0,0,0), size=15),
+            plot.margin=unit(c(25,15,25,15), "pt"),
+            axis.title.y=element_text(size=15, margin=margin(0,20,0,0)))
     print(country)
   })
   
@@ -56,8 +58,11 @@ shinyServer(function(input, output) {
     growth <- ggplot(fullDataContent, aes(x=date_added, y=total_content)) + 
       geom_line(aes(linetype=Type, color=Type), size=1) +
       labs(x="Date", y="Number of Contents", title="Content Growth Each Year") +
-      theme(plot.title=element_text(size=16), axis.title=element_text(size=15), axis.text=element_text(size=12), 
-            legend.title=element_text(size=15), legend.text=element_text(size=12))
+      theme(plot.title=element_text(size=18, margin=margin(0,0,20,0), hjust=0.5), 
+            axis.title.x=element_text(margin=margin(20,0,0,0), size=15),
+            axis.title.y=element_text(size=15, margin=margin(0,20,0,0)),
+            plot.margin=unit(c(25,15,25,15), "pt"), axis.text=element_text(size=12), 
+            legend.title=element_text(size=15), legend.text=element_text(size=12), legend.position="top")
     print(growth)
   })
   
