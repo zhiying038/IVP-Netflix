@@ -2,6 +2,9 @@ library(dplyr)
 library(shiny)
 library(ggplot2)
 library(DT)
+library("rnaturalearth")
+library("rnaturalearthdata")
+library("sf")
 
 ##################
 # DATA WRANGLING #
@@ -33,6 +36,11 @@ names(fullDataContent)[4] <- "Type"
 totalMovies <- na.omit(originalNetflix) %>% group_by(type) %>% summarise(count=n())
 movie <- filter(totalMovies, type == "Movie")
 show <- filter(totalMovies, type == "TV Show")
+
+# World Map
+world <- ne_countries(scale = "medium", returnclass = "sf")
+world$continent[world$continent == "Seven seas (open ocean)"] <- "Africa"
+unique_country = unique(originalNetflix$country)
 
 ################
 # SERVER LOGIC #
@@ -87,5 +95,28 @@ shinyServer(function(input, output) {
     infoBox(
       "Total Contents", show$count + movie$count, icon=icon("globe-americas"), color="red"
     )
+  })
+  
+  # Total Countries
+  output$totalCountries <- renderInfoBox({
+    infoBox(
+      "Total Countries", length(unique_country), icon=icon("flag"), color="red"
+    )
+  })
+  
+  # Total Continents
+  output$totalContinent <- renderInfoBox({
+    infoBox(
+      "Total Continents", "6", icon=icon("globe"), color="red"
+    )
+  })
+  
+  # Map
+  output$mapCountry <- renderPlot({
+	map <- ggplot(world[world$name %in% country_list,],aes(fill = continent)) + 
+	  geom_sf(color = "black") +
+	  labs(title="Countries with content available on Netflix ") +
+	  theme(plot.title=element_text(size=18, margin=margin(0,0,20,0), hjust=0.5))
+	print(map)  
   })
 })

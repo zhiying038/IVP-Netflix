@@ -29,10 +29,20 @@ shinyUI(dashboardPage(
           withSpinner(infoBoxOutput("totalShowsBox"), color="red"),
           withSpinner(infoBoxOutput("totalContentBox"), color="red")
         ),
+		br(),
+        fluidRow(
+          withSpinner(infoBoxOutput("totalCountries"), color="red"),
+          withSpinner(infoBoxOutput("totalContinent"), color="red")
+        ),
         br(),
         fluidRow(
           column(6, plotOutput(outputId="topCountryBar")),
           column(6, plotOutput(outputId="contentGrowth"))
+        ),
+		br(),
+		br(),
+        fluidRow(
+          plotOutput(outputId="mapCountry"),
         )
       )
     )
