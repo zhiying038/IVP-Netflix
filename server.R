@@ -32,6 +32,11 @@ contentByDate <- originalNetflix %>% group_by(date_added, type) %>% summarise(ad
 fullDataContent <- rbind(as.data.frame(totalContent), as.data.frame(contentByDate))
 names(fullDataContent)[4] <- "Type"
 
+# Total movies
+totalMovies <- na.omit(originalNetflix) %>% group_by(type) %>% summarise(count=n())
+movie <- filter(totalMovies, type == "Movie")
+show <- filter(totalMovies, type == "TV Show")
+
 ################
 # SERVER LOGIC #
 ################
@@ -48,10 +53,34 @@ shinyServer(function(input, output) {
   
   # Content growth
   output$contentGrowth <- renderPlot({
-    growth <- ggplot(fullDataContent, aes(x=date_added, y=total_content)) + geom_line(aes(linetype=Type, color=Type)) +
+    growth <- ggplot(fullDataContent, aes(x=date_added, y=total_content)) + 
+      geom_line(aes(linetype=Type, color=Type), size=1) +
       labs(x="Date", y="Number of Contents", title="Content Growth Each Year") +
       theme(plot.title=element_text(size=16), axis.title=element_text(size=15), axis.text=element_text(size=12), 
             legend.title=element_text(size=15), legend.text=element_text(size=12))
     print(growth)
+  })
+  
+  # Total movies
+  output$totalMoviesBox <- renderInfoBox({
+    infoBox(
+      "Total Movies", movie$count, icon=icon("film"),
+      color = "red"
+    )
+  })
+  
+  # Total shows
+  output$totalShowsBox <- renderInfoBox({
+    infoBox(
+      "Total TV Shows", show$count, icon=icon("video"),
+      color="red"
+    )
+  })
+  
+  # Total contents
+  output$totalContentBox <- renderInfoBox({
+    infoBox(
+      "Total Contents", show$count + movie$count, icon=icon("globe-americas"), color="red"
+    )
   })
 })
