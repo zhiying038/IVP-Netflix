@@ -113,7 +113,7 @@ shinyServer(function(input, output) {
   
   # Map
   output$mapCountry <- renderPlot({
-	map <- ggplot(world[world$name %in% country_list,],aes(fill = continent)) + 
+	map <- ggplot(world[world$name %in% unique_country,],aes(fill = continent)) + 
 	  geom_sf(color = "black") +
 	  labs(title="Countries with content available on Netflix ") +
 	  theme(plot.title=element_text(size=18, margin=margin(0,0,20,0), hjust=0.5))
