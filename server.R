@@ -2,9 +2,10 @@ library(dplyr)
 library(shiny)
 library(ggplot2)
 library(DT)
-library("rnaturalearth")
-library("rnaturalearthdata")
-library("sf")
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(sf)
+library(plotly)
 
 ##################
 # DATA WRANGLING #
@@ -48,30 +49,31 @@ unique_country = unique(originalNetflix$country)
 
 shinyServer(function(input, output) {
   # Top country
-  output$topCountryBar <- renderPlot({
-    country <- ggplot(topCountry, aes(x=reorder(country, -count), y=count, fill=country)) +
+  output$topCountryBar <- renderPlotly({
+    country <- ggplot(topCountry, aes(x=reorder(country, -count), y=count, fill=country, text=paste("Number of Contents: ", count))) +
       geom_bar(stat="identity", show.legend=FALSE) + 
       scale_fill_hue(c=40) +
       labs(x="Country", y="Total Contents", title="Top Countries By Amount of Content Produced") +
-      theme(axis.text=element_text(size=12), 
-            plot.title=element_text(size=18, margin=margin(0,0,20,0), hjust=0.5),
-            axis.title.x=element_text(margin=margin(20,0,0,0), size=15),
-            plot.margin=unit(c(25,15,25,15), "pt"),
-            axis.title.y=element_text(size=15, margin=margin(0,20,0,0)))
-    print(country)
+      theme(axis.text=element_text(size=10),
+            legend.position="none",
+            plot.title=element_text(size=13, hjust=0.5),
+            axis.title.x=element_text(size=12),
+            axis.title.y=element_text(size=12))
+   ggplotly(country, tooltip=c("text"))
   })
   
   # Content growth
-  output$contentGrowth <- renderPlot({
-    growth <- ggplot(fullDataContent, aes(x=date_added, y=total_content)) + 
-      geom_line(aes(linetype=Type, color=Type), size=1) +
+  output$contentGrowth <- renderPlotly({
+    growth <- ggplot(fullDataContent, aes(x=date_added, y=total_content, group=Type,
+                                          text=paste("Type: ", Type, "<br>Date Added: ", date_added, "<br>Total Contents: ", total_content))) + 
+      geom_line(aes(linetype=Type, color=Type)) +
       labs(x="Date", y="Number of Contents", title="Content Growth Each Year") +
-      theme(plot.title=element_text(size=18, margin=margin(0,0,20,0), hjust=0.5), 
-            axis.title.x=element_text(margin=margin(20,0,0,0), size=15),
-            axis.title.y=element_text(size=15, margin=margin(0,20,0,0)),
-            plot.margin=unit(c(25,15,25,15), "pt"), axis.text=element_text(size=12), 
-            legend.title=element_text(size=15), legend.text=element_text(size=12), legend.position="top")
-    print(growth)
+      theme(plot.title=element_text(size=13, hjust=0.5), 
+            legend.title=element_blank(),
+            axis.title.x=element_text(size=12),
+            axis.title.y=element_text(size=12),
+            axis.text=element_text(size=10))
+    ggplotly(growth, tooltip=c("text"))
   })
   
   # Total movies
@@ -112,11 +114,25 @@ shinyServer(function(input, output) {
   })
   
   # Map
-  output$mapCountry <- renderPlot({
-	map <- ggplot(world[world$name %in% unique_country,],aes(fill = continent)) + 
-	  geom_sf(color = "black") +
-	  labs(title="Countries with content available on Netflix ") +
-	  theme(plot.title=element_text(size=18, margin=margin(0,0,20,0), hjust=0.5))
-	print(map)  
+  output$mapCountry <- renderPlotly({
+  	map <- ggplot(world[world$name %in% unique_country,], aes(fill = continent)) + 
+  	  geom_sf(color="black") +
+  	  labs(title="Countries with Content Available on Netflix") +
+  	  theme(plot.title=element_text(size=13, hjust=0.5),
+  	        legend.title=element_blank())
+  	ggplotly(map) 
   })
+
+  # Search table
+  output$netflixTable <- renderDataTable(
+    originalNetflix[,-c(2,6,9)], filter="top",
+    extensions=c("Buttons"),
+    options=list(
+      autoWidth=TRUE, pageLength=10, scrollX=TRUE,
+      dom="Bfrtip",
+      buttons=c("copy", "csv", "excel", "pdf", "print"),
+      columnDefs=list(
+        list(width="150px",targets=c(2,3,4,5,7,8,9,10)))
+    )
+  )
 })

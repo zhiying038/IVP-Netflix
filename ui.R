@@ -1,6 +1,7 @@
 library(shinythemes)
 library(shinycssloaders)
 library(shinydashboard)
+library(plotly)
 
 ###########
 # LOAD UI #
@@ -12,7 +13,8 @@ shinyUI(dashboardPage(
   dashboardSidebar(
     width=300,
     sidebarMenu(
-      menuItem("Overview", tabName="overview", icon=icon("chart-line"))
+      menuItem("Overview", tabName="overview", icon=icon("chart-line")),
+      menuItem("Search", tabName="search", icon=icon("search"))
     )
   ),
   dashboardBody(
@@ -21,7 +23,6 @@ shinyUI(dashboardPage(
         tabName="overview",
         HTML('<center><img src="netflix-logo.png" width="400"></center>'),
         br(),
-        br(),
         h2("One of the Most Popular Content Platform in the World", style="text-align: center;"),
         br(),
         fluidRow(
@@ -29,22 +30,23 @@ shinyUI(dashboardPage(
           withSpinner(infoBoxOutput("totalShowsBox"), color="red"),
           withSpinner(infoBoxOutput("totalContentBox"), color="red")
         ),
-		br(),
+		    br(),
         fluidRow(
           withSpinner(infoBoxOutput("totalCountries"), color="red"),
           withSpinner(infoBoxOutput("totalContinent"), color="red")
         ),
         br(),
         fluidRow(
-          column(6, plotOutput(outputId="topCountryBar")),
-          column(6, plotOutput(outputId="contentGrowth"))
+          column(6, plotlyOutput(outputId="topCountryBar")),
+          column(6, plotlyOutput(outputId="contentGrowth"))
         ),
-		br(),
-		br(),
-        fluidRow(
-          plotOutput(outputId="mapCountry"),
-        )
-      )
+		    br(),
+		    br(),
+		    fluidRow(
+		      column(12, plotlyOutput(outputId="mapCountry"))
+		    )
+      ),
+      tabItem(tabName="search", withSpinner(dataTableOutput(outputId="netflixTable"), color="red"))
     )
   )
 ))
