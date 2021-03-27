@@ -21,7 +21,7 @@ shinyUI(dashboardPage(
     )
   ),
   dashboardBody(
-	tags$head(tags$link(rel = "shortcut icon", href = "favicon.jpg")),
+	  tags$head(tags$link(rel = "shortcut icon", href = "favicon.jpg")),
     tabItems(
       tabItem(
         tabName="overview",
@@ -54,29 +54,28 @@ shinyUI(dashboardPage(
 	  tabItem(
 		tabName="movies",
 		fluidRow(
-          column(9, withSpinner(plotlyOutput(outputId="mapMovie"),color = 'red')),
-		  column(3,
+      column(8, withSpinner(plotlyOutput(outputId="mapMovie"),color = 'red')),
+		  column(4,
 			box(title = "Filter", width = NULL, status = 'warning',
 				radioButtons("typeInput", "Type", choices = c("Movie", "TV Show"), selected = "Movie"),
 				uiOutput("countryOutput"),
 				uiOutput("genreOutput"),
 				sliderInput("yearInput", "Release Year", 1925, 2021, c(1925, 2021))))
-        ),
-		br(),
-        fluidRow(
-          withSpinner(dataTableOutput("movieResults"), color="red"),
-        )
+      ),
+		  br(),
+      fluidRow(
+        column(12, withSpinner(dataTableOutput("movieResults"), color="red")),
+      )
 	  ),
 	  tabItem(
-		tabName="rating",
-		fluidRow(
-		  column(3,
-			box(title = "Filter", width = NULL, status = 'warning',
-				uiOutput("continentOutput"),
-				uiOutput("ratingOutput"))))
-        
-	  ),
-      tabItem(tabName="search", withSpinner(dataTableOutput(outputId="netflixTable"), color="red"))
-    )
+	    tabName="rating",
+  		fluidRow(
+  		  column(3,
+  			box(title = "Filter", width = NULL, status = 'warning',
+  				uiOutput("continentOutput"),
+  				uiOutput("ratingOutput")))
+  		)
+  	),
+    tabItem(tabName="search", withSpinner(dataTableOutput(outputId="netflixTable"), color="red")))
   )
 ))

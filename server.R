@@ -157,7 +157,7 @@ shinyServer(function(input, output) {
 	movie_filtered <- movie_filtered %>% count(country)
 	movie_filtered <- merge(movie_filtered,iso,by.x="country",by.y = "country")
 			
-  	map <- plot_ly(movie_filtered, type='choropleth', locations=movie_filtered$code, z=movie_filtered$n, colorscale="tealgrn")
+  map <- plot_ly(movie_filtered, type='choropleth', locations=movie_filtered$code, z=movie_filtered$n, colorscale="tealgrn")
 	map <- map %>% layout(
     mapbox = list(
       style = 'open-street-map',
@@ -169,22 +169,31 @@ shinyServer(function(input, output) {
 
    #Table
    output$movieResults <- renderDataTable({
-	 movie_filtered <-
-	  movieNetflix %>%
-	  filter(type == input$typeInput,
-		release_year >= input$yearInput[1],
-		release_year <= input$yearInput[2])
+  	 movie_filtered <-
+  	  movieNetflix %>%
+  	  filter(type == input$typeInput,
+  		release_year >= input$yearInput[1],
+  		release_year <= input$yearInput[2])
 		   
-	 if (input$countryInput != "All"){
-	 movie_filtered <- movie_filtered %>% filter(country == input$countryInput)}
-		
-	 if (input$genreInput != "All"){
-	 movie_filtered <- movie_filtered %>% filter(listed_in == input$genreInput)}
-	
-	 movie_filtered <- subset(movie_filtered, select=-c(listed_in))
-	 movie_filtered <- unique(movie_filtered)
-	 
-	 movie_filtered
+  	 if (input$countryInput != "All") {
+  	  movie_filtered <- movie_filtered %>% filter(country == input$countryInput)
+  	 }
+  		
+  	 if (input$genreInput != "All") {
+  	  movie_filtered <- movie_filtered %>% filter(listed_in == input$genreInput)
+  	 }
+  	
+  	 movie_filtered <- subset(movie_filtered, select=-c(listed_in))
+  	 movie_filtered <- unique(movie_filtered)
+  	 movie_filtered <- movie_filtered %>% rename(
+  	   "Country" = country,
+  	   "Type" = type,
+  	   "Title" = title,
+  	   "Release Year" = release_year,
+  	   "Description" = description
+  	 )
+  	 
+  	 movie_filtered
 	 })
 	
   # Unique Country
@@ -217,6 +226,7 @@ shinyServer(function(input, output) {
   output$netflixTable <- renderDataTable(
     originalNetflix[,-c(2,6,9)], filter="top",
     extensions=c("Buttons"),
+    colnames=c("ID", "Country", "Title", "Director", "Cast", "Release Year", "Rating", "Genres", "Description", "Trailer Link", "Continent"),
     options=list(
       autoWidth=TRUE, pageLength=10, scrollX=TRUE,
       dom="Bfrtip",
@@ -224,6 +234,6 @@ shinyServer(function(input, output) {
       columnDefs=list(
         list(width="150px",targets=c(2,3,4,5,7,8,9,10)))
     ),
-	escape = FALSE
+	  escape = FALSE
   )
 })
