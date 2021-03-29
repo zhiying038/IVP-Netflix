@@ -67,13 +67,15 @@ shinyServer(function(input, output) {
             plot.title=element_text(size=13, hjust=0.5),
             axis.title.x=element_text(size=12),
             axis.title.y=element_text(size=12))
-   ggplotly(country, tooltip=c("text"))
+    ggplotly(country, tooltip=c("text"))
   })
   
   # Content growth
   output$contentGrowth <- renderPlotly({
     growth <- ggplot(fullDataContent, aes(x=date_added, y=total_content, group=Type,
-                                          text=paste("Type: ", Type, "<br>Date Added: ", date_added, "<br>Total Contents: ", total_content))) + 
+                                          text=paste("Type: ", Type, 
+                                                     "<br>Date Added: ", date_added, 
+                                                     "<br>Total Contents: ", total_content))) + 
       geom_line(aes(linetype=Type, color=Type)) +
       labs(x="Date", y="Number of Contents", title="Content Growth Each Year") +
       theme(plot.title=element_text(size=13, hjust=0.5), 
@@ -141,28 +143,28 @@ shinyServer(function(input, output) {
   # Movie Tab
   # Movie Map
   output$mapMovie <- renderPlotly({
-	movie_filtered <-
-    movieNetflix %>%
-    filter(type == input$typeInput,
-		   release_year >= input$yearInput[1],
-           release_year <= input$yearInput[2]
-    )
-	
-	if (input$countryInput != "All"){
-	movie_filtered <- movie_filtered %>% filter(country == input$countryInput)}
-	
-	if (input$genreInput != "All"){
-	movie_filtered <- movie_filtered %>% filter(listed_in == input$genreInput)}
-	
-	movie_filtered <- movie_filtered %>% count(country)
-	movie_filtered <- merge(movie_filtered,iso,by.x="country",by.y = "country")
-			
-  map <- plot_ly(movie_filtered, type='choropleth', locations=movie_filtered$code, z=movie_filtered$n, colorscale="tealgrn")
-	map <- map %>% layout(
-    mapbox = list(
-      style = 'open-street-map',
-      zoom =2.5,
-      center = list(lon = -88, lat = 34))) 
+  	movie_filtered <-
+      movieNetflix %>%
+      filter(type == input$typeInput,
+  		   release_year >= input$yearInput[1],
+             release_year <= input$yearInput[2]
+      )
+  	
+  	if (input$countryInput != "All"){
+  	movie_filtered <- movie_filtered %>% filter(country == input$countryInput)}
+  	
+  	if (input$genreInput != "All"){
+  	movie_filtered <- movie_filtered %>% filter(listed_in == input$genreInput)}
+  	
+  	movie_filtered <- movie_filtered %>% count(country)
+  	movie_filtered <- merge(movie_filtered,iso,by.x="country",by.y = "country")
+  			
+    map <- plot_ly(movie_filtered, type='choropleth', locations=movie_filtered$code, z=movie_filtered$n, colorscale="tealgrn")
+  	map <- map %>% layout(
+      mapbox = list(
+        style = 'open-street-map',
+        zoom =2.5,
+        center = list(lon = -88, lat = 34))) 
 	
   	ggplotly(map) 
   })
@@ -198,13 +200,13 @@ shinyServer(function(input, output) {
 	
   # Unique Country
   output$countryOutput <- renderUI({
-  selectInput("countryInput", "Country",
+    selectInput("countryInput", "Country",
               append("All", unique_country, after = 1),
               selected = "All")})
 			  
   # Unique Genre
   output$genreOutput <- renderUI({
-  selectInput("genreInput", "Genre",
+    selectInput("genreInput", "Genre",
 			  append("All", unique(movieNetflix$listed_in), after = 1),
               selected = "All")})
 			  
@@ -212,27 +214,31 @@ shinyServer(function(input, output) {
   # Rating Tab
   # Unique Continent
   output$continentOutput <- renderUI({
-  selectInput("continentInput", "Continent",
+    selectInput("continentInput", "Continent",
 			  append("All", unique(originalNetflix$continent), after = 1),
               selected = "All")})
 			  
   # Unique Rating			  
   output$ratingOutput <- renderUI({
-  selectInput("ratingInput", "Rating",
+    selectInput("ratingInput", "Rating",
 			  append("All", unique(originalNetflix$rating), after = 1),
               selected = "All")})
 			  
   # Search table
   output$netflixTable <- renderDataTable(
-    originalNetflix[,-c(2,6,9)], filter="top",
-    extensions=c("Buttons"),
-    colnames=c("ID", "Country", "Title", "Director", "Cast", "Release Year", "Rating", "Genres", "Description", "Trailer Link", "Continent"),
+    originalNetflix[,-c(2,6,13)], filter="top",
+    colnames=c("ID", "Country", "Title", "Director", "Cast", "Release Year", "Rating", "Duration", "Genres", "Description", "Trailer Link"),
     options=list(
       autoWidth=TRUE, pageLength=10, scrollX=TRUE,
-      dom="Bfrtip",
-      buttons=c("copy", "csv", "excel", "pdf", "print"),
+      processing=FALSE,
       columnDefs=list(
-        list(width="150px",targets=c(2,3,4,5,7,8,9,10)))
+        list(width="150px",targets=c(1,2,4,8,9)),
+        list(width="100px", targets=3),
+        list(width="80px", targets=10),
+        list(width="50px", targets=c(5,7)),
+        list(width="5px", targets=0),
+        list(className="dt-center", targets=c(0,5,6,7))
+      )
     ),
 	  escape = FALSE
   )
