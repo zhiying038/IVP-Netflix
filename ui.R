@@ -17,7 +17,7 @@ shinyUI(dashboardPage(
 	  menuItem("Movies/TV Shows", tabName="movies", icon=icon("video")),
 	  menuItem("Rating", tabName="rating", icon=icon("star-half-alt")),
 	  menuItem("Genre", tabName="genre", icon=icon("th-list")),
-      menuItem("Search", tabName="search", icon=icon("search"))
+      menuItem("All Movies/TV Shows", tabName="search", icon=icon("search"))
     )
   ),
   dashboardBody(
@@ -43,24 +43,24 @@ shinyUI(dashboardPage(
         br(),
         fluidRow(
           column(6, plotlyOutput(outputId="topCountryBar")),
-          column(6, plotlyOutput(outputId="contentGrowth"))
+          column(6, plotlyOutput(outputId="mapCountry"))
         ),
 		    br(),
 		    br(),
 		    fluidRow(
-		      column(12, plotlyOutput(outputId="mapCountry"))
+		      column(12, plotlyOutput(outputId="contentGrowth"))
 		    )
       ),
 	  tabItem(
 		tabName="movies",
 		fluidRow(
-      column(8, withSpinner(plotlyOutput(outputId="mapMovie"),color = 'red')),
-		  column(4,
-			box(title = "Filter", width = NULL, status = 'warning',
-				radioButtons("typeInput", "Type", choices = c("Movie", "TV Show"), selected = "Movie"),
-				uiOutput("countryOutput"),
-				uiOutput("genreOutput"),
-				sliderInput("yearInput", "Release Year", 1925, 2021, c(1925, 2021))))
+      column(7, withSpinner(plotlyOutput(outputId="mapMovie"),color = 'red')),
+		  column(5,
+			  box(title = "Filter", width = NULL, status = 'warning',
+  				radioButtons("typeInput", "Type", choices = c("Movie", "TV Show"), selected = "Movie"),
+  				uiOutput("countryOutput"),
+  				uiOutput("genreOutput"),
+  				sliderInput("yearInput", "Release Year", 1925, 2021, c(1925, 2021))))
       ),
 		  br(),
       fluidRow(
