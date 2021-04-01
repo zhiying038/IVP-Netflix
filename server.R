@@ -50,6 +50,19 @@ world <- ne_countries(scale = "medium", returnclass = "sf")
 world$continent[world$continent == "Seven seas (open ocean)"] <- "Africa"
 unique_country = sort(unique(originalNetflix$country))
 
+# New column for age group based on rating
+genres <- strsplit(originalNetflix$listed_in, split=", ")
+netflixListedIn <- data.frame(type=rep(originalNetflix$type, sapply(genres, length)), 
+                              listed_in=unlist(genres),
+                              rating=rep(originalNetflix$rating, sapply(genres, length)))
+
+netflixListedIn$age_group[(netflixListedIn$rating == "TV-PG") | (netflixListedIn$rating == "TV-Y7-FV") | (netflixListedIn$rating == "TV-Y7") |
+                       (netflixListedIn$rating == "PG")] <- "Older Kids"
+netflixListedIn$age_group[(netflixListedIn$rating == "TV-MA") | (netflixListedIn$rating == "R") | (netflixListedIn$rating == "NR") |
+                       (netflixListedIn$rating == "UR") | (netflixListedIn$rating == "NC-17")] <- "Adults"
+netflixListedIn$age_group[(netflixListedIn$rating == "TV-14") | (netflixListedIn$rating == "PG-13")] <- "Teens"
+netflixListedIn$age_group[(netflixListedIn$rating == "TV-Y") | (netflixListedIn$rating == "TV-G") | (netflixListedIn$rating == "G")] <- "Kids"
+
 ################
 # SERVER LOGIC #
 ################
@@ -140,7 +153,6 @@ shinyServer(function(input, output) {
   	ggplotly(map) 
   })
   
-  # Movie Tab
   # Movie Map
   output$mapMovie <- renderPlotly({
   	movie_filtered <-
@@ -210,7 +222,6 @@ shinyServer(function(input, output) {
 			  append("All", unique(movieNetflix$listed_in), after = 1),
               selected = "All")})
 			  
-	
   # Rating Tab
   # Unique Continent
   output$continentOutput <- renderUI({
@@ -223,6 +234,34 @@ shinyServer(function(input, output) {
     selectInput("ratingInput", "Rating",
 			  append("All", unique(originalNetflix$rating), after = 1),
               selected = "All")})
+  
+  # Genres bar chart
+  output$genresBarChart <- renderPlotly({
+    genresBar <- netflixListedIn
+    
+    if (input$ageGroupInput != "All") {
+      genresBar <- netflixListedIn %>% filter(age_group == input$ageGroupInput)
+    }
+    genresBar <- na.omit(genresBar) %>% count(listed_in) %>% top_n(5)
+    
+    newBar <- ggplot(genresBar, aes(x=listed_in, y=n, fill=listed_in, text=paste("Number of Contents: ", n, "<br>Genre: ", listed_in))) + 
+      geom_bar(stat="identity", show.legend=FALSE) +
+      scale_fill_brewer(palette="Dark2") +
+      labs(x="Genres", y="Number of Contents Contents", title="Most Popular Genres Based on Age Group") +
+      theme(axis.text=element_text(size=10),
+            legend.position="none",
+            plot.title=element_text(size=13, hjust=0.5),
+            axis.title.x=element_text(size=12),
+            axis.title.y=element_text(size=12))
+    
+    ggplotly(newBar, tooltip=c("text")) 
+  })
+  
+  # Unique age group
+  output$ageGroupOutput <- renderUI({
+    selectInput("ageGroupInput", "Age Group",
+                append("All", unique(netflixListedIn$age_group), after=1),
+                selected="All")})
 			  
   # Search table
   output$netflixTable <- renderDataTable(

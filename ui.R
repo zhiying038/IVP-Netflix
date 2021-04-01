@@ -14,9 +14,10 @@ shinyUI(dashboardPage(
     width=300,
     sidebarMenu(
       menuItem("Overview", tabName="overview", icon=icon("chart-line")),
-	  menuItem("Movies/TV Shows", tabName="movies", icon=icon("video")),
-	  menuItem("Rating", tabName="rating", icon=icon("star-half-alt")),
-	  menuItem("Genre", tabName="genre", icon=icon("th-list")),
+  	  menuItem("Movies/TV Shows", tabName="movies", icon=icon("video")),
+  	  menuItem("Rating", tabName="rating", icon=icon("star-half-alt")),
+  	  menuItem("Genre", tabName="genre", icon=icon("th-list")),
+      menuItem("Recommendation", tabName="recommendation", icon=icon("heart")),
       menuItem("All Movies/TV Shows", tabName="search", icon=icon("search"))
     )
   ),
@@ -38,18 +39,13 @@ shinyUI(dashboardPage(
         fluidRow(
           withSpinner(infoBoxOutput("totalCountries"), color="red"),
           withSpinner(infoBoxOutput("totalContinent"), color="red"),
-		  withSpinner(infoBoxOutput("totalYear"), color="red"),
+		      withSpinner(infoBoxOutput("totalYear"), color="red")
         ),
         br(),
         fluidRow(
           column(6, plotlyOutput(outputId="topCountryBar")),
-          column(6, plotlyOutput(outputId="mapCountry"))
-        ),
-		    br(),
-		    br(),
-		    fluidRow(
-		      column(12, plotlyOutput(outputId="contentGrowth"))
-		    )
+          column(6, plotlyOutput(outputId="contentGrowth"))
+        )
       ),
 	  tabItem(
 		tabName="movies",
@@ -64,7 +60,7 @@ shinyUI(dashboardPage(
       ),
 		  br(),
       fluidRow(
-        column(12, withSpinner(dataTableOutput("movieResults"), color="red")),
+        column(12, withSpinner(dataTableOutput("movieResults"), color="red"))
       )
 	  ),
 	  tabItem(
@@ -76,6 +72,15 @@ shinyUI(dashboardPage(
   				uiOutput("ratingOutput")))
   		)
   	),
-    tabItem(tabName="search", withSpinner(dataTableOutput(outputId="netflixTable"), color="red")))
+		tabItem(
+		  tabName="recommendation",
+		  fluidRow(
+		    column(7, withSpinner(plotlyOutput(outputId="genresBarChart"), color='red')),
+		    column(5,
+		           box(title = "Filter", width = NULL, status = 'warning',
+		               uiOutput("ageGroupOutput")
+		  )))
+		),
+		tabItem(tabName="search", withSpinner(dataTableOutput(outputId="netflixTable"), color="red")))
   )
 ))
