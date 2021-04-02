@@ -2,17 +2,16 @@ library(dplyr)
 library(shiny)
 library(ggplot2)
 library(DT)
-library(rnaturalearth)
-library(rnaturalearthdata)
 library(sf)
 library(plotly)
+library(shinyjs)
+library(rnaturalearth)
 
 ##################
 # DATA WRANGLING #
 ##################
 
 originalNetflix <- read.csv(file="netflix_titles.csv", na.strings=c("NA", ""), stringsAsFactors=F)
-movieNetflix <- read.csv(file="movie_dataset.csv")
 iso <- read.csv(file="iso.csv")
 
 # Tidy and enrich dataframes
@@ -52,8 +51,11 @@ unique_country = sort(unique(originalNetflix$country))
 
 # New column for age group based on rating
 genres <- strsplit(originalNetflix$listed_in, split=", ")
-netflixListedIn <- data.frame(type=rep(originalNetflix$type, sapply(genres, length)), 
+netflixListedIn <- data.frame(type=rep(originalNetflix$type, sapply(genres, length)),
+							  country=rep(originalNetflix$country, sapply(genres, length)),
                               listed_in=unlist(genres),
+							  release_year=rep(originalNetflix$release_year, sapply(genres, length)),
+							  continent=rep(originalNetflix$continent, sapply(genres, length)),
                               rating=rep(originalNetflix$rating, sapply(genres, length)))
 
 netflixListedIn$age_group[(netflixListedIn$rating == "TV-PG") | (netflixListedIn$rating == "TV-Y7-FV") | (netflixListedIn$rating == "TV-Y7") |
@@ -62,6 +64,7 @@ netflixListedIn$age_group[(netflixListedIn$rating == "TV-MA") | (netflixListedIn
                        (netflixListedIn$rating == "UR") | (netflixListedIn$rating == "NC-17")] <- "Adults"
 netflixListedIn$age_group[(netflixListedIn$rating == "TV-14") | (netflixListedIn$rating == "PG-13")] <- "Teens"
 netflixListedIn$age_group[(netflixListedIn$rating == "TV-Y") | (netflixListedIn$rating == "TV-G") | (netflixListedIn$rating == "G")] <- "Kids"
+
 
 ################
 # SERVER LOGIC #
@@ -143,126 +146,158 @@ shinyServer(function(input, output) {
     )
   })
   
-  # Map
-  output$mapCountry <- renderPlotly({
-  	map <- ggplot(world[world$name %in% unique_country,], aes(fill = continent)) + 
-  	  geom_sf(color="black") +
-  	  labs(title="Countries with Content Available on Netflix") +
-  	  theme(plot.title=element_text(size=13, hjust=0.5),
-  	        legend.title=element_blank())
-  	ggplotly(map) 
-  })
-  
-  # Movie Map
-  output$mapMovie <- renderPlotly({
-  	movie_filtered <-
-      movieNetflix %>%
-      filter(type == input$typeInput,
-  		   release_year >= input$yearInput[1],
-             release_year <= input$yearInput[2]
-      )
-  	
-  	if (input$countryInput != "All"){
-  	movie_filtered <- movie_filtered %>% filter(country == input$countryInput)}
-  	
-  	if (input$genreInput != "All"){
-  	movie_filtered <- movie_filtered %>% filter(listed_in == input$genreInput)}
-  	
-  	movie_filtered <- movie_filtered %>% count(country)
-  	movie_filtered <- merge(movie_filtered,iso,by.x="country",by.y = "country")
-  			
-    map <- plot_ly(movie_filtered, type='choropleth', locations=movie_filtered$code, z=movie_filtered$n, colorscale="tealgrn")
-  	map <- map %>% layout(
-      mapbox = list(
-        style = 'open-street-map',
-        zoom =2.5,
-        center = list(lon = -88, lat = 34))) 
-	
-  	ggplotly(map) 
-  })
-
-   #Table
-   output$movieResults <- renderDataTable({
-  	 movie_filtered <-
-  	  movieNetflix %>%
-  	  filter(type == input$typeInput,
-  		release_year >= input$yearInput[1],
-  		release_year <= input$yearInput[2])
-		   
-  	 if (input$countryInput != "All") {
-  	  movie_filtered <- movie_filtered %>% filter(country == input$countryInput)
-  	 }
-  		
-  	 if (input$genreInput != "All") {
-  	  movie_filtered <- movie_filtered %>% filter(listed_in == input$genreInput)
-  	 }
-  	
-  	 movie_filtered <- subset(movie_filtered, select=-c(listed_in))
-  	 movie_filtered <- unique(movie_filtered)
-  	 movie_filtered <- movie_filtered %>% rename(
-  	   "Country" = country,
-  	   "Type" = type,
-  	   "Title" = title,
-  	   "Release Year" = release_year,
-  	   "Description" = description
-  	 )
-  	 
-  	 movie_filtered
-	 })
 	
   # Unique Country
   output$countryOutput <- renderUI({
     selectInput("countryInput", "Country",
               append("All", unique_country, after = 1),
               selected = "All")})
-			  
-  # Unique Genre
-  output$genreOutput <- renderUI({
-    selectInput("genreInput", "Genre",
-			  append("All", unique(movieNetflix$listed_in), after = 1),
-              selected = "All")})
-			  
-  # Rating Tab
-  # Unique Continent
-  output$continentOutput <- renderUI({
-    selectInput("continentInput", "Continent",
-			  append("All", unique(originalNetflix$continent), after = 1),
-              selected = "All")})
-			  
-  # Unique Rating			  
-  output$ratingOutput <- renderUI({
-    selectInput("ratingInput", "Rating",
-			  append("All", unique(originalNetflix$rating), after = 1),
-              selected = "All")})
+
+  # Initialize a variable to count how many times "Next" is clicked.
+  values <- reactiveValues(data = 1)
+
+  # Control "Next" button
+  observeEvent(input$btnN, {
+	if (values$data < 4){
+		values$data = values$data + 1
+	}}
+  )
   
-  # Genres bar chart
-  output$genresBarChart <- renderPlotly({
-    genresBar <- netflixListedIn
-    
-    if (input$ageGroupInput != "All") {
-      genresBar <- netflixListedIn %>% filter(age_group == input$ageGroupInput)
-    }
-    genresBar <- na.omit(genresBar) %>% count(listed_in) %>% top_n(5)
-    
-    newBar <- ggplot(genresBar, aes(x=listed_in, y=n, fill=listed_in, text=paste("Number of Contents: ", n, "<br>Genre: ", listed_in))) + 
-      geom_bar(stat="identity", show.legend=FALSE) +
-      scale_fill_brewer(palette="Dark2") +
-      labs(x="Genres", y="Number of Contents Contents", title="Most Popular Genres Based on Age Group") +
-      theme(axis.text=element_text(size=10),
-            legend.position="none",
-            plot.title=element_text(size=13, hjust=0.5),
-            axis.title.x=element_text(size=12),
-            axis.title.y=element_text(size=12))
-    
-    ggplotly(newBar, tooltip=c("text")) 
-  })
+  # Control "Back" button 
+  observeEvent(input$btnB, {
+	if (values$data != 1){
+		values$data = values$data - 1
+	}}
+  )
   
-  # Unique age group
-  output$ageGroupOutput <- renderUI({
-    selectInput("ageGroupInput", "Age Group",
+  observe(
+	if (values$data == 1){
+		disable('btnB')
+		enable('btnN')
+	}
+	else if (values$data == 4){
+		enable("btnB")
+		disable('btnN')
+	}
+	else{
+		enable('btnB')
+		enable('btnN')
+	}
+  )
+
+  # Determine which filter display
+  output$filter <- renderUI({
+	if (values$data == 0) {
+		 return()
+		 
+	  } else if (values$data == 1) {
+	  
+	    #Age Group
+		selectInput("ageGroupInput", "Age Group",
                 append("All", unique(netflixListedIn$age_group), after=1),
-                selected="All")})
+                selected="All")
+				
+	  }else if (values$data == 2){
+	  
+	    bubbleChart <- netflixListedIn
+		 
+	     if (input$ageGroupInput != "All") {
+		  bubbleChart <- netflixListedIn %>% filter(age_group == input$ageGroupInput)
+		}
+	  
+		#Genre
+		selectInput("genreInput", "Genre",
+			  append("All", unique(bubbleChart$listed_in), after = 1),
+              selected = "All")  
 			  
+	  }else if (values$data == 3){
+	  
+	    countryMap <- netflixListedIn
+		 
+	    if (input$ageGroupInput != "All") {
+		  countryMap <- netflixListedIn %>% filter(age_group == input$ageGroupInput)
+		}
+		
+		if (input$genreInput != "All") {
+		  countryMap <- netflixListedIn %>% filter(listed_in == input$genreInput)
+		}
+	  
+		#Release Year
+		sliderInput("countryInput", label = "Slider Range", min = min(countryMap$release_year), max = max(countryMap$release_year), value = c(min(countryMap$release_year), max(countryMap$release_year)))  
+	  }
+  }
+  )
+	
+  # Determine which graph display
+  output$graph <- renderPlotly({
+	  if (values$data == 0) {
+		 return()
+	  } else if (values$data == 1) {
+	  
+	    # Genre Bar Graph
+		genresBar <- netflixListedIn
+    
+		if (input$ageGroupInput != "All") {
+		  genresBar <- netflixListedIn %>% filter(age_group == input$ageGroupInput)
+		}
+		genresBarS <- na.omit(genresBar) %>% count(listed_in) %>% top_n(5)
+		
+		newBar <- ggplot(genresBarS, aes(x=listed_in, y=n, fill=listed_in, text=paste("Number of Contents: ", n, "<br>Genre: ", listed_in))) + 
+		  geom_bar(stat="identity", show.legend=FALSE) +
+		  scale_fill_brewer(palette="Dark2") +
+		  labs(x="Genres", y="Number of Contents Contents", title="Most Popular Genres Based on Age Group") +
+		  theme(axis.text=element_text(size=10),
+				legend.position="none",
+				plot.title=element_text(size=13, hjust=0.5),
+				axis.title.x=element_text(size=12),
+				axis.title.y=element_text(size=12))
+		
+		ggplotly(newBar, tooltip=c("text"))
+	  } else if (values$data == 2) {
+	  
+	     bubbleChart <- netflixListedIn
+		 
+	     if (input$ageGroupInput != "All") {
+		  bubbleChart <- netflixListedIn %>% filter(age_group == input$ageGroupInput)
+		}
+			
+		 if (input$genreInput != "All"){
+			bubbleChart <- bubbleChart %>% filter(listed_in == input$genreInput)}
+			
+		 bubbleChart <- bubbleChart %>% count(release_year,country,continent)	
+		 
+		 bubble <- ggplot(bubbleChart , aes(x=release_year, y=n, size = n,color = continent,text = paste("Country: ", bubbleChart$country, "\nNo of show: ", bubbleChart$n,sep="")))+ 
+				scale_size(name="Continent") +
+				geom_point(alpha=0.7)+
+				ylab("No. of Movie") +
+				xlab("Release Year")
+		 	
+		 ggplotly(bubble, tooltip = "text")	
+		 
+	  } else if (values$data == 3) {
+	  
+	     countryMap <- netflixListedIn
+		 
+	     if (input$ageGroupInput != "All") {
+		  countryMap <- netflixListedIn %>% filter(age_group == input$ageGroupInput)
+		}
+		
+		 if (input$genreInput != "All"){
+			countryMap <- countryMap %>% filter(listed_in == input$genreInput)}
+			
+		 countryMap <- countryMap %>% filter(release_year >= input$countryInput[1])
+		 countryMap <- countryMap %>% filter(release_year <= input$countryInput[2])
+			
+		 countryMap <- countryMap %>% count(country)	
+		 countryMap <- merge(countryMap,iso,by.x="country",by.y = "country")	
+		 map <- plot_ly(countryMap, type='choropleth', locations=countryMap$code, z=countryMap$n, colorscale="tealgrn")	
+		 	
+		 ggplotly(map)	
+	  } else if (values$data == 4) {
+		 dataTableOutput("select4")
+	  }
+  }) 
+	
   # Search table
   output$netflixTable <- renderDataTable(
     originalNetflix[,-c(2,6,13)], filter="top",
