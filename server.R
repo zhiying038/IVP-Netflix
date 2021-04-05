@@ -78,7 +78,7 @@ shinyServer(function(input, output) {
     country <- ggplot(topCountry, aes(x=reorder(country, -count), y=count, fill=country, text=paste("Number of Contents: ", count))) +
       geom_bar(stat="identity", show.legend=FALSE) + 
       scale_fill_hue(c=40) +
-      labs(x="Country", y="Total Contents", title="Top Countries By Amount of Content Produced") +
+      labs(x="Country", y="Total Contents", title="Countries By Content Produced") +
       theme(axis.text=element_text(size=10),
             legend.position="none",
             plot.title=element_text(size=13, hjust=0.5),
@@ -218,7 +218,7 @@ shinyServer(function(input, output) {
 		}
 	  
 		#Release Year
-		sliderInput("yearInput", label = "Slider Range", min = min(countryMap$release_year), max = max(countryMap$release_year), value = c(min(countryMap$release_year), max(countryMap$release_year)))  
+		sliderInput("yearInput", label = "Release Year", min = min(countryMap$release_year), max = max(countryMap$release_year), value = c(min(countryMap$release_year), max(countryMap$release_year)))  
 		
 	  }else if (values$data == 4){
 	  
@@ -258,7 +258,7 @@ shinyServer(function(input, output) {
 		}
 		genresBarS <- na.omit(genresBar) %>% count(listed_in) %>% top_n(5)
 		
-		newBar <- ggplot(genresBarS, aes(x=listed_in, y=n, fill=listed_in, text=paste("Number of Contents: ", n, "<br>Genre: ", listed_in))) + 
+		newBar <- ggplot(genresBarS, aes(x=reorder(listed_in, -n), y=n, fill=listed_in, text=paste("Number of Contents: ", n, "<br>Genre: ", listed_in))) + 
 		  geom_bar(stat="identity", show.legend=FALSE) +
 		  scale_fill_brewer(palette="Dark2") +
 		  labs(x="Genres", y="Number of Contents Contents", title="Most Popular Genres Based on Age Group") +
@@ -268,61 +268,58 @@ shinyServer(function(input, output) {
 				axis.title.x=element_text(size=12),
 				axis.title.y=element_text(size=12))
 		
-		ggplotly(newBar, tooltip=c("text"))
+		  ggplotly(newBar, tooltip=c("text"))
 	  } else if (values$data == 2) {
-	  
-	     bubbleChart <- netflixListedIn
+     bubbleChart <- netflixListedIn
 		 
-	     if (input$ageGroupInput != "All") {
-		  bubbleChart <- bubbleChart %>% filter(age_group == input$ageGroupInput)
-		}
+     if (input$ageGroupInput != "All") {
+       bubbleChart <- bubbleChart %>% filter(age_group == input$ageGroupInput)
+	   }
 			
 		 if (input$genreInput != "All"){
-			bubbleChart <- bubbleChart %>% filter(listed_in == input$genreInput)}
-			
-		 bubbleChart <- bubbleChart %>% count(release_year,country,continent)	
-		 
-		 bubble <- ggplot(bubbleChart , aes(x=release_year, y=n, size = n,color = continent,text = paste("Country: ", bubbleChart$country, "\nNo of show: ", bubbleChart$n,sep="")))+ 
+		   bubbleChart <- bubbleChart %>% filter(listed_in == input$genreInput)}
+			 bubbleChart <- bubbleChart %>% count(release_year, country, continent)	
+			 
+			 bubble <- ggplot(bubbleChart, aes(x=release_year, y=n, size=n, color = continent,text = paste("Country: ", bubbleChart$country, 
+		                                                                                               "\nNumber of Show(s)/Movie(s): ", bubbleChart$n,sep=""))) + 
 				scale_size(name="Continent") +
-				geom_point(alpha=0.7)+
-				ylab("No. of Movie") +
-				xlab("Release Year")
-		 	
-		 ggplotly(bubble, tooltip = "text")	
-		 
+				geom_point(alpha=0.7) +
+				ylab("Number of Movie(s)") +
+				xlab("Release Year") +
+			   theme(legend.title=element_blank())
+			 
+			 ggplotly(bubble, tooltip = "text")	
 	  } else if (values$data == 3) {
-	  
-	     countryMap <- netflixListedIn
-		 
-	     if (input$ageGroupInput != "All") {
-		  countryMap <- countryMap %>% filter(age_group == input$ageGroupInput)
-		}
-		
-		 if (input$genreInput != "All"){
-			countryMap <- countryMap %>% filter(listed_in == input$genreInput)}
+	    countryMap <- netflixListedIn
+	    
+	    if (input$ageGroupInput != "All") {
+		    countryMap <- countryMap %>% filter(age_group == input$ageGroupInput)
+		  }
+	    
+	    if (input$genreInput != "All"){
+			  countryMap <- countryMap %>% filter(listed_in == input$genreInput)}
 			
-		 countryMap <- countryMap %>% filter(release_year >= input$yearInput[1])
-		 countryMap <- countryMap %>% filter(release_year <= input$yearInput[2])
+  		 countryMap <- countryMap %>% filter(release_year >= input$yearInput[1])
+  		 countryMap <- countryMap %>% filter(release_year <= input$yearInput[2])
 			
-		 countryMap <- countryMap %>% count(country)	
-		 countryMap <- merge(countryMap,iso,by.x="country",by.y = "country")	
-		 map <- plot_ly(countryMap, type='choropleth', locations=countryMap$code, z=countryMap$n, colorscale="tealgrn")	
+  		 countryMap <- countryMap %>% count(country)	
+  		 countryMap <- merge(countryMap,iso,by.x="country",by.y = "country")	
+  		 map <- plot_ly(countryMap, type='choropleth', locations=countryMap$code, z=countryMap$n, colorscale="tealgrn")	
 		 	
-		 ggplotly(map)	
+		  ggplotly(map)	
 	  } else if (values$data == 4) {
-		 
 		 tableResult <- netflixListedIn
 		 
-	    if (input$ageGroupInput != "All") {
+	   if (input$ageGroupInput != "All") {
 		  tableResult <- tableResult %>% filter(age_group == input$ageGroupInput)
-		}
-		
-		if (input$genreInput != "All") {
+		 }
+		 
+		 if (input$genreInput != "All") {
 		  tableResult <- tableResult %>% filter(listed_in == input$genreInput)
-		}
-	  
-	    tableResult <- tableResult %>% filter(release_year >= input$yearInput[1])
-		tableResult <- tableResult %>% filter(release_year <= input$yearInput[2])
+		 }
+		 
+		 tableResult <- tableResult %>% filter(release_year >= input$yearInput[1])
+		 tableResult <- tableResult %>% filter(release_year <= input$yearInput[2])
 		
 		if (input$countryInput != "All") {
 		  tableResult <- tableResult %>% filter(country == input$countryInput)

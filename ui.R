@@ -5,6 +5,7 @@ library(plotly)
 library(rintrojs)
 library(shinyLP)
 library(shinyjs)
+library(shinyWidgets)
 
 ###########
 # LOAD UI #
@@ -31,7 +32,9 @@ shinyUI(dashboardPage(
         h2("One of the Most Popular Content Platform in the World", style="text-align: center;"),
         br(),
 		fluidPage(
-		tags$video(src = "video.mp4", type = "video/mp4", autoplay = TRUE, controls = TRUE, width = "1225px"),
+		  HTML('<center><iframe width="560" height="315" src="https://www.youtube.com/embed/XL6zNexyt8o" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; 
+		       gyroscope; picture-in-picture" allowfullscreen></iframe></center>'),
+		#tags$video(src="video.mp4", type = "video/mp4", autoplay = TRUE, controls = TRUE, width = "1225px"),
 		),
 		br(),
         fluidRow(
@@ -56,21 +59,19 @@ shinyUI(dashboardPage(
 		  fluidPage(
 		  shinyjs::useShinyjs(),
 		  fluidRow(
-			withSpinner(plotlyOutput(outputId="graph"), color='red')
+		    box(title = "Filter", width = NULL, status="danger",
+		        uiOutput("filter"),
+		    )
 		  ),
 		  br(),
 		  fluidRow(
-			box(title = "Filter", width = NULL, status = 'warning', 
-			uiOutput("filter"),
-			)
+		    withSpinner(plotlyOutput(outputId="graph"), color='red')
 		  ),
 		  fluidRow(
-			tags$div(class = "wrap",
-				div(class = 'center', style="display: inline-block;vertical-align:top; width: 622px;",actionButton("btnB", label = "Back", width= "612px", height= "40px", style="color: #fff; background-color: #DD4B39; border-color: #ac0e28")),
-				div(class = 'center', style="display: inline-block;vertical-align:top; width: 622px;",actionButton("btnN", label = "Next", width= "612px", height= "40px", style="color: #fff; background-color: #DD4B39; border-color: #ac0e28"))
-			)
-		  )
-		)),
+		    tags$div(style="margin-top: 2em; text-align: center;",
+		      actionGroupButtons(inputIds=c("btnB", "btnN"), labels=list("Previous", "Next"), status="danger", size="lg", fullwidth=TRUE)
+		    )
+		))),
 		tabItem(tabName="search", withSpinner(dataTableOutput(outputId="netflixTable"), color="red")))
   )
 ))
