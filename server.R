@@ -55,6 +55,7 @@ netflixListedIn <- data.frame(type=rep(originalNetflix$type, sapply(genres, leng
 							  country=rep(originalNetflix$country, sapply(genres, length)),
                               listed_in=unlist(genres),
 							  release_year=rep(originalNetflix$release_year, sapply(genres, length)),
+							  title=rep(originalNetflix$title, sapply(genres, length)),
 							  continent=rep(originalNetflix$continent, sapply(genres, length)),
                               rating=rep(originalNetflix$rating, sapply(genres, length)))
 
@@ -146,12 +147,6 @@ shinyServer(function(input, output) {
     )
   })
   
-	
-  # Unique Country
-  output$countryOutput <- renderUI({
-    selectInput("countryInput", "Country",
-              append("All", unique_country, after = 1),
-              selected = "All")})
 
   # Initialize a variable to count how many times "Next" is clicked.
   values <- reactiveValues(data = 1)
@@ -202,7 +197,7 @@ shinyServer(function(input, output) {
 	    bubbleChart <- netflixListedIn
 		 
 	     if (input$ageGroupInput != "All") {
-		  bubbleChart <- netflixListedIn %>% filter(age_group == input$ageGroupInput)
+		  bubbleChart <- bubbleChart %>% filter(age_group == input$ageGroupInput)
 		}
 	  
 		#Genre
@@ -215,15 +210,36 @@ shinyServer(function(input, output) {
 	    countryMap <- netflixListedIn
 		 
 	    if (input$ageGroupInput != "All") {
-		  countryMap <- netflixListedIn %>% filter(age_group == input$ageGroupInput)
+		  countryMap <- countryMap %>% filter(age_group == input$ageGroupInput)
 		}
 		
 		if (input$genreInput != "All") {
-		  countryMap <- netflixListedIn %>% filter(listed_in == input$genreInput)
+		  countryMap <- countryMap %>% filter(listed_in == input$genreInput)
 		}
 	  
 		#Release Year
-		sliderInput("countryInput", label = "Slider Range", min = min(countryMap$release_year), max = max(countryMap$release_year), value = c(min(countryMap$release_year), max(countryMap$release_year)))  
+		sliderInput("yearInput", label = "Slider Range", min = min(countryMap$release_year), max = max(countryMap$release_year), value = c(min(countryMap$release_year), max(countryMap$release_year)))  
+		
+	  }else if (values$data == 4){
+	  
+	    tableResult <- netflixListedIn
+		 
+	    if (input$ageGroupInput != "All") {
+		  tableResult <- tableResult %>% filter(age_group == input$ageGroupInput)
+		}
+		
+		if (input$genreInput != "All") {
+		  tableResult <- tableResult %>% filter(listed_in == input$genreInput)
+		}
+	  
+	    tableResult <- tableResult %>% filter(release_year >= input$yearInput[1])
+		tableResult <- tableResult %>% filter(release_year <= input$yearInput[2])
+		 
+		 
+		#Release Year
+		selectInput("countryInput", "Country",
+                append("All", unique(tableResult$country), after=1),
+                selected="All")
 	  }
   }
   )
@@ -258,7 +274,7 @@ shinyServer(function(input, output) {
 	     bubbleChart <- netflixListedIn
 		 
 	     if (input$ageGroupInput != "All") {
-		  bubbleChart <- netflixListedIn %>% filter(age_group == input$ageGroupInput)
+		  bubbleChart <- bubbleChart %>% filter(age_group == input$ageGroupInput)
 		}
 			
 		 if (input$genreInput != "All"){
@@ -279,14 +295,14 @@ shinyServer(function(input, output) {
 	     countryMap <- netflixListedIn
 		 
 	     if (input$ageGroupInput != "All") {
-		  countryMap <- netflixListedIn %>% filter(age_group == input$ageGroupInput)
+		  countryMap <- countryMap %>% filter(age_group == input$ageGroupInput)
 		}
 		
 		 if (input$genreInput != "All"){
 			countryMap <- countryMap %>% filter(listed_in == input$genreInput)}
 			
-		 countryMap <- countryMap %>% filter(release_year >= input$countryInput[1])
-		 countryMap <- countryMap %>% filter(release_year <= input$countryInput[2])
+		 countryMap <- countryMap %>% filter(release_year >= input$yearInput[1])
+		 countryMap <- countryMap %>% filter(release_year <= input$yearInput[2])
 			
 		 countryMap <- countryMap %>% count(country)	
 		 countryMap <- merge(countryMap,iso,by.x="country",by.y = "country")	
@@ -294,7 +310,29 @@ shinyServer(function(input, output) {
 		 	
 		 ggplotly(map)	
 	  } else if (values$data == 4) {
-		 dataTableOutput("select4")
+		 
+		 tableResult <- netflixListedIn
+		 
+	    if (input$ageGroupInput != "All") {
+		  tableResult <- tableResult %>% filter(age_group == input$ageGroupInput)
+		}
+		
+		if (input$genreInput != "All") {
+		  tableResult <- tableResult %>% filter(listed_in == input$genreInput)
+		}
+	  
+	    tableResult <- tableResult %>% filter(release_year >= input$yearInput[1])
+		tableResult <- tableResult %>% filter(release_year <= input$yearInput[2])
+		
+		if (input$countryInput != "All") {
+		  tableResult <- tableResult %>% filter(country == input$countryInput)
+		}
+		
+		tableResult <- unique(select(tableResult, release_year,country, title))
+		
+		table <- plot_ly(type="table",header=list(values=names(tableResult)), cells=list(values=unname(tableResult))) 
+		
+		ggplotly(table)
 	  }
   }) 
 	
