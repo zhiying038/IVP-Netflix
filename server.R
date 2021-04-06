@@ -208,18 +208,18 @@ shinyServer(function(input, output, session) {
 			  
 	  }else if (values$data == 3){
 	  
-	    countryMap <- netflixListedIn
+	    lineGraph <- netflixListedIn
 		 
 	    if (input$ageGroupInput != "All") {
-		  countryMap <- countryMap %>% filter(age_group == input$ageGroupInput)
+		  lineGraph <- lineGraph %>% filter(age_group == input$ageGroupInput)
 		}
 		
 		if (input$genreInput != "All") {
-		  countryMap <- countryMap %>% filter(listed_in == input$genreInput)
+		  lineGraph <- lineGraph %>% filter(listed_in == input$genreInput)
 		}
 	  
 		#Release Year
-		sliderInput("yearInput", label = "Release Year", min = min(countryMap$release_year), max = max(countryMap$release_year), value = c(min(countryMap$release_year), max(countryMap$release_year)))  
+		sliderInput("yearInput", label = "Release Year", min = min(lineGraph$release_year), max = max(lineGraph$release_year), value = c(min(lineGraph$release_year), max(lineGraph$release_year)))  
 		
 	  }else if (values$data == 4){
 	  
@@ -297,23 +297,25 @@ shinyServer(function(input, output, session) {
 		ggtitle("Number of Shows Available In Each Country")
 			 
 	  } else if (values$data == 3) {
-	    countryMap <- netflixListedIn
+	    lineGraph <- netflixListedIn
 	    
 	    if (input$ageGroupInput != "All") {
-		    countryMap <- countryMap %>% filter(age_group == input$ageGroupInput)
+		    lineGraph <- lineGraph %>% filter(age_group == input$ageGroupInput)
 		  }
 	    
 	    if (input$genreInput != "All"){
-			  countryMap <- countryMap %>% filter(listed_in == input$genreInput)}
+	      lineGraph <- lineGraph %>% filter(listed_in == input$genreInput)}
 			
-  		 countryMap <- countryMap %>% filter(release_year >= input$yearInput[1])
-  		 countryMap <- countryMap %>% filter(release_year <= input$yearInput[2])
+	     lineGraph <- lineGraph %>% filter(release_year >= input$yearInput[1])
+	     lineGraph <- lineGraph %>% filter(release_year <= input$yearInput[2])
 			
-  		 countryMap <- countryMap %>% count(country)	
-  		 countryMap <- merge(countryMap,iso,by.x="country",by.y = "country")	
-  		 map <- plot_ly(countryMap, type='choropleth', locations=countryMap$code, z=countryMap$n, colorscale="tealgrn")	
+	     lineGraph <- lineGraph %>% count(release_year, continent)	
+	     lineGraph <- ggplot(data = lineGraph, aes(x=release_year, y=n, group=continent)) + geom_line(aes(color = continent)) + 
+	       labs(x = "Release Year", y = "Number of Contents") + 
+	       ggtitle("Number of Contents Over the Years") + 
+	       theme(plot.title = element_text(hjust = 0.5))
 		 	
-		  ggplotly(map)	
+		  ggplotly(lineGraph)	
 	  } else if (values$data == 4) {
 		 tableResult <- netflixListedIn
 		 
