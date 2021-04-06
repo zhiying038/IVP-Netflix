@@ -292,8 +292,9 @@ shinyServer(function(input, output, session) {
 	 ggplot() +
 		geom_polygon(data = world, aes(x=long, y = lat, group = group), fill="grey", alpha=0.3) +
 		geom_point(data=bubbleMap, aes(x=longitude, y=latitude, size=shows, color = continent,text = paste("country: ", bubbleMap$country)))+
-		theme(legend.title=element_blank())+
-		labs(y="Latitude", x = "Longitude")
+		theme(legend.title=element_blank(),plot.title = element_text(hjust = 0.5))+
+		labs(y="Latitude", x = "Longitude")+
+		ggtitle("Number of Shows Available In Each Country")
 			 
 	  } else if (values$data == 3) {
 	    countryMap <- netflixListedIn
