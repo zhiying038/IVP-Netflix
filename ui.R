@@ -57,11 +57,11 @@ shinyUI(dashboardPage(
 		tabItem(
 		  tabName="recommendation",
 		  fluidPage(
-		  shinyjs::useShinyjs(),
-		  fluidRow(
-		    box(title = "Filter", width = NULL, status="danger",
-		        uiOutput("filter"),
-		    )
+  		  shinyjs::useShinyjs(),
+  		  fluidRow(
+  		    box(title = "Filter", width = NULL, status="danger",
+  		        uiOutput("filter"),
+  		    )
 		  ),
 		  br(),
 		  fluidRow(

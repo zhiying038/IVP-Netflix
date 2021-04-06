@@ -261,7 +261,7 @@ shinyServer(function(input, output) {
 		newBar <- ggplot(genresBarS, aes(x=reorder(listed_in, -n), y=n, fill=listed_in, text=paste("Number of Contents: ", n, "<br>Genre: ", listed_in))) + 
 		  geom_bar(stat="identity", show.legend=FALSE) +
 		  scale_fill_brewer(palette="Dark2") +
-		  labs(x="Genres", y="Number of Contents Contents", title="Most Popular Genres Based on Age Group") +
+		  labs(x="Genres", y="Number of Contents", title="Most Popular Genres Based on Age Group") +
 		  theme(axis.text=element_text(size=10),
 				legend.position="none",
 				plot.title=element_text(size=13, hjust=0.5),
