@@ -5,6 +5,7 @@ library(DT)
 library(sf)
 library(plotly)
 library(shinyjs)
+library(maps)
 library(rnaturalearth)
 
 ##################
@@ -12,6 +13,7 @@ library(rnaturalearth)
 ##################
 
 originalNetflix <- read.csv(file="netflix_titles.csv", na.strings=c("NA", ""), stringsAsFactors=F)
+map <- read.csv(file="map.csv")
 iso <- read.csv(file="iso.csv")
 
 # Tidy and enrich dataframes
@@ -71,7 +73,7 @@ netflixListedIn$age_group[(netflixListedIn$rating == "TV-Y") | (netflixListedIn$
 # SERVER LOGIC #
 ################
 
-shinyServer(function(input, output) {
+shinyServer(function(input, output, session) {
   # Overview Tab
   # Top country
   output$topCountryBar <- renderPlotly({
@@ -146,8 +148,7 @@ shinyServer(function(input, output) {
       "Total Year Involved", "97", icon=icon("history"), color="red"
     )
   })
-  
-
+	
   # Initialize a variable to count how many times "Next" is clicked.
   values <- reactiveValues(data = 1)
 
@@ -194,15 +195,15 @@ shinyServer(function(input, output) {
 				
 	  }else if (values$data == 2){
 	  
-	    bubbleChart <- netflixListedIn
+	    bubbleMap <- netflixListedIn
 		 
 	     if (input$ageGroupInput != "All") {
-		  bubbleChart <- bubbleChart %>% filter(age_group == input$ageGroupInput)
+		  bubbleMap <- bubbleMap %>% filter(age_group == input$ageGroupInput)
 		}
 	  
 		#Genre
 		selectInput("genreInput", "Genre",
-			  append("All", unique(bubbleChart$listed_in), after = 1),
+			  append("All", unique(bubbleMap$listed_in), after = 1),
               selected = "All")  
 			  
 	  }else if (values$data == 3){
@@ -261,7 +262,7 @@ shinyServer(function(input, output) {
 		newBar <- ggplot(genresBarS, aes(x=reorder(listed_in, -n), y=n, fill=listed_in, text=paste("Number of Contents: ", n, "<br>Genre: ", listed_in))) + 
 		  geom_bar(stat="identity", show.legend=FALSE) +
 		  scale_fill_brewer(palette="Dark2") +
-		  labs(x="Genres", y="Number of Contents", title="Most Popular Genres Based on Age Group") +
+		  labs(x="Genres", y="Number of Contents Contents", title="Most Popular Genres Based on Age Group") +
 		  theme(axis.text=element_text(size=10),
 				legend.position="none",
 				plot.title=element_text(size=13, hjust=0.5),
@@ -270,25 +271,30 @@ shinyServer(function(input, output) {
 		
 		  ggplotly(newBar, tooltip=c("text"))
 	  } else if (values$data == 2) {
-     bubbleChart <- netflixListedIn
+     bubbleMap <- netflixListedIn
 		 
      if (input$ageGroupInput != "All") {
-       bubbleChart <- bubbleChart %>% filter(age_group == input$ageGroupInput)
+       bubbleMap <- bubbleMap %>% filter(age_group == input$ageGroupInput)
 	   }
 			
-		 if (input$genreInput != "All"){
-		   bubbleChart <- bubbleChart %>% filter(listed_in == input$genreInput)}
-			 bubbleChart <- bubbleChart %>% count(release_year, country, continent)	
+	 if (input$genreInput != "All"){
+	   bubbleMap <- bubbleMap %>% filter(listed_in == input$genreInput)}
+		
+	 bubbleMap <- bubbleMap %>% count(country, continent)
+	
+	 colnames(bubbleMap)[3] <- "shows"
+	 
+	 ## get the world map
+	 world <- map_data("world")
+	 
+	 bubbleMap <- merge(bubbleMap,map,by.x="country",by.y = "country")
+	 
+	 ggplot() +
+		geom_polygon(data = world, aes(x=long, y = lat, group = group), fill="grey", alpha=0.3) +
+		geom_point(data=bubbleMap, aes(x=longitude, y=latitude, size=shows, color = continent,text = paste("country: ", bubbleMap$country)))+
+		theme(legend.title=element_blank())+
+		labs(y="Latitude", x = "Longitude")
 			 
-			 bubble <- ggplot(bubbleChart, aes(x=release_year, y=n, size=n, color = continent,text = paste("Country: ", bubbleChart$country, 
-		                                                                                               "\nNumber of Show(s)/Movie(s): ", bubbleChart$n,sep=""))) + 
-				scale_size(name="Continent") +
-				geom_point(alpha=0.7) +
-				ylab("Number of Movie(s)") +
-				xlab("Release Year") +
-			   theme(legend.title=element_blank())
-			 
-			 ggplotly(bubble, tooltip = "text")	
 	  } else if (values$data == 3) {
 	    countryMap <- netflixListedIn
 	    
