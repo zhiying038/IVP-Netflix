@@ -2,6 +2,10 @@ library(shinythemes)
 library(shinycssloaders)
 library(shinydashboard)
 library(plotly)
+library(rintrojs)
+library(shinyLP)
+library(shinyjs)
+library(shinyWidgets)
 
 ###########
 # LOAD UI #
@@ -14,9 +18,7 @@ shinyUI(dashboardPage(
     width=300,
     sidebarMenu(
       menuItem("Overview", tabName="overview", icon=icon("chart-line")),
-	  menuItem("Movies/TV Shows", tabName="movies", icon=icon("video")),
-	  menuItem("Rating", tabName="rating", icon=icon("star-half-alt")),
-	  menuItem("Genre", tabName="genre", icon=icon("th-list")),
+      menuItem("Recommendation", tabName="recommendation", icon=icon("heart")),
       menuItem("All Movies/TV Shows", tabName="search", icon=icon("search"))
     )
   ),
@@ -29,6 +31,11 @@ shinyUI(dashboardPage(
         br(),
         h2("One of the Most Popular Content Platform in the World", style="text-align: center;"),
         br(),
+		fluidPage(
+		  HTML('<center><iframe width="560" height="315" src="https://www.youtube.com/embed/XL6zNexyt8o" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; 
+		       gyroscope; picture-in-picture" allowfullscreen></iframe></center>')
+		),
+		br(),
         fluidRow(
           withSpinner(infoBoxOutput("totalMoviesBox"), color="red"),
           withSpinner(infoBoxOutput("totalShowsBox"), color="red"),
@@ -38,44 +45,34 @@ shinyUI(dashboardPage(
         fluidRow(
           withSpinner(infoBoxOutput("totalCountries"), color="red"),
           withSpinner(infoBoxOutput("totalContinent"), color="red"),
-		  withSpinner(infoBoxOutput("totalYear"), color="red"),
+		  withSpinner(infoBoxOutput("totalYear"), color="red")
         ),
         br(),
         fluidRow(
           column(6, plotlyOutput(outputId="topCountryBar")),
-          column(6, plotlyOutput(outputId="mapCountry"))
-        ),
-		    br(),
-		    br(),
-		    fluidRow(
-		      column(12, plotlyOutput(outputId="contentGrowth"))
-		    )
+          column(6, plotlyOutput(outputId="contentGrowth"))
+        )
       ),
-	  tabItem(
-		tabName="movies",
-		fluidRow(
-      column(7, withSpinner(plotlyOutput(outputId="mapMovie"),color = 'red')),
-		  column(5,
-			  box(title = "Filter", width = NULL, status = 'warning',
-  				radioButtons("typeInput", "Type", choices = c("Movie", "TV Show"), selected = "Movie"),
-  				uiOutput("countryOutput"),
-  				uiOutput("genreOutput"),
-  				sliderInput("yearInput", "Release Year", 1925, 2021, c(1925, 2021))))
-      ),
+		tabItem(
+		  tabName="recommendation",
+		  fluidPage(
+  		  shinyjs::useShinyjs(),
+  		  fluidRow(
+  		    column(12,
+  		    box(title = "Filter", width = NULL, status="danger",
+  		        uiOutput("filter"),
+  		    ))
+		  ),
 		  br(),
-      fluidRow(
-        column(12, withSpinner(dataTableOutput("movieResults"), color="red")),
-      )
-	  ),
-	  tabItem(
-	    tabName="rating",
-  		fluidRow(
-  		  column(3,
-  			box(title = "Filter", width = NULL, status = 'warning',
-  				uiOutput("continentOutput"),
-  				uiOutput("ratingOutput")))
-  		)
-  	),
-    tabItem(tabName="search", withSpinner(dataTableOutput(outputId="netflixTable"), color="red")))
+		  fluidRow(
+		    column(12, withSpinner(plotlyOutput(outputId="graph"), color='red'))
+		  ),
+		  fluidRow(
+		    column(12,
+		    tags$div(style="margin-top: 6em; text-align: center;",
+		      actionGroupButtons(inputIds=c("btnB", "btnN"), labels=list("Previous", "Next"), status="danger", size="lg", fullwidth=TRUE)
+		    ))
+		))),
+		tabItem(tabName="search", withSpinner(DT::dataTableOutput(outputId="netflixTable"), color="red")))
   )
 ))
