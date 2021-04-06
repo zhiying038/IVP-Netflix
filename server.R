@@ -236,7 +236,6 @@ shinyServer(function(input, output, session) {
 	    tableResult <- tableResult %>% filter(release_year >= input$yearInput[1])
 		tableResult <- tableResult %>% filter(release_year <= input$yearInput[2])
 		 
-		 
 		#Release Year
 		selectInput("countryInput", "Country",
                 append("All", unique(tableResult$country), after=1),
@@ -335,15 +334,30 @@ shinyServer(function(input, output, session) {
 		}
 		
 		tableResult <- unique(select(tableResult, release_year,country, title))
+		tableResult <- tableResult[order(tableResult$release_year),]
 		
-		table <- plot_ly(type="table",header=list(values=names(tableResult)), cells=list(values=unname(tableResult))) 
-		
+		table <- plot_ly(type="table",
+		                 height=450,
+		                 header=list(
+		                   values=c("<b>Release Year</b>", "<b>Country</b>", "<b>Title</b>"),
+		                   line=list(color = '#506784')
+		                 ), 
+		                 cells=list(
+		                   values=unname(tableResult),
+		                   align=c("center", "center", "left"),
+		                   height=30
+		                )) %>% layout(margin=list(
+		                  l = 50,
+		                  r = 50,
+		                  b = 20,
+		                  t = 50
+		                ))
 		ggplotly(table)
 	  }
   }) 
 	
   # Search table
-  output$netflixTable <- renderDataTable(
+  output$netflixTable <- DT::renderDataTable(
     originalNetflix[,-c(2,6,13)], filter="top",
     colnames=c("ID", "Country", "Title", "Director", "Cast", "Release Year", "Rating", "Duration", "Genres", "Description", "Trailer Link"),
     options=list(

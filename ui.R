@@ -33,8 +33,7 @@ shinyUI(dashboardPage(
         br(),
 		fluidPage(
 		  HTML('<center><iframe width="560" height="315" src="https://www.youtube.com/embed/XL6zNexyt8o" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; 
-		       gyroscope; picture-in-picture" allowfullscreen></iframe></center>'),
-		#tags$video(src="video.mp4", type = "video/mp4", autoplay = TRUE, controls = TRUE, width = "1225px"),
+		       gyroscope; picture-in-picture" allowfullscreen></iframe></center>')
 		),
 		br(),
         fluidRow(
@@ -59,19 +58,21 @@ shinyUI(dashboardPage(
 		  fluidPage(
   		  shinyjs::useShinyjs(),
   		  fluidRow(
+  		    column(12,
   		    box(title = "Filter", width = NULL, status="danger",
   		        uiOutput("filter"),
-  		    )
+  		    ))
 		  ),
 		  br(),
 		  fluidRow(
-		    withSpinner(plotlyOutput(outputId="graph"), color='red')
+		    column(12, withSpinner(plotlyOutput(outputId="graph"), color='red'))
 		  ),
 		  fluidRow(
-		    tags$div(style="margin-top: 2em; text-align: center;",
+		    column(12,
+		    tags$div(style="margin-top: 6em; text-align: center;",
 		      actionGroupButtons(inputIds=c("btnB", "btnN"), labels=list("Previous", "Next"), status="danger", size="lg", fullwidth=TRUE)
-		    )
+		    ))
 		))),
-		tabItem(tabName="search", withSpinner(dataTableOutput(outputId="netflixTable"), color="red")))
+		tabItem(tabName="search", withSpinner(DT::dataTableOutput(outputId="netflixTable"), color="red")))
   )
 ))
