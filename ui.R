@@ -58,10 +58,11 @@ shinyUI(dashboardPage(
 		  fluidPage(
   		  shinyjs::useShinyjs(),
   		  fluidRow(
-  		    column(12,
-  		    box(title = "Filter", width = NULL, status="danger",
-  		        uiOutput("filter"),
-  		    ))
+  		    column(12, 
+  		      box(width = NULL, status="danger", uiOutput("filter"), textOutput(outputId="typeSelection")
+  		    ),
+  		      #box(textOutput(outputId="typeSelection"))
+  		    )
 		  ),
 		  br(),
 		  fluidRow(

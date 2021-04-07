@@ -170,16 +170,16 @@ shinyServer(function(input, output, session) {
   
   observe(
 	if (values$data == 1){
-		disable('btnB')
-		enable('btnN')
+	  hide("btnB")
+		show('btnN')
 	}
 	else if (values$data == 5){
-		enable("btnB")
-		disable('btnN')
+		show("btnB")
+		hide("btnN")
 	}
 	else{
-		enable('btnB')
-		enable('btnN')
+		show('btnB')
+		show('btnN')
 	}
   )
 
@@ -189,7 +189,7 @@ shinyServer(function(input, output, session) {
 		 return()
 	  } else if (values$data == 1) {
 	    #Age Group
-		  selectInput("ageGroupInput", "Age Group",
+		  selectInput("ageGroupInput", "Select Age Group",
                 append("All", unique(netflixListedIn$age_group), after=1),
                 selected="All")
 	  } else if (values$data == 2) {
@@ -199,7 +199,7 @@ shinyServer(function(input, output, session) {
 	      typePie <- typePie %>% filter(age_group == input$ageGroupInput)
 	    }
 	    
-	    radioButtons("typeInput", "Type", choices=list("Movie" = "Movie", "TV Show" = "TV Show"), inline=TRUE)
+	    radioButtons("typeInput", "Select Type", choices=list("Movie" = "Movie", "TV Show" = "TV Show"), inline=TRUE)
 	  } else if (values$data == 3) {
 	    bubbleMap <- netflixListedIn
 		 
@@ -208,7 +208,7 @@ shinyServer(function(input, output, session) {
 	    }
 	  
   		#Genre
-  		selectInput("genreInput", "Genre",
+  		selectInput("genreInput", "Select Genre",
   			  append("All", unique(bubbleMap$listed_in), after = 1),
                 selected = "All")  
 	  } else if (values$data == 4) {
@@ -223,8 +223,9 @@ shinyServer(function(input, output, session) {
   		}
 	  
 		  #Release Year
-		  sliderInput("yearInput", label = "Release Year", min = min(lineGraph$release_year), 
-		              max = max(lineGraph$release_year), value = c(min(lineGraph$release_year), max(lineGraph$release_year)))  
+		  sliderInput("yearInput", label = "Select Range of Release Year", min = min(lineGraph$release_year), 
+		              max = max(lineGraph$release_year), value = c(min(lineGraph$release_year), max(lineGraph$release_year)),
+		              format="####")  
 		
 	  } else if (values$data == 5) {
 	    tableResult <- netflixListedIn
@@ -241,12 +242,21 @@ shinyServer(function(input, output, session) {
 		  tableResult <- tableResult %>% filter(release_year <= input$yearInput[2])
 		 
   		#Release Year
-  		selectInput("countryInput", "Country",
+  		selectInput("countryInput", "Select Country",
                   append("All", unique(tableResult$country), after=1),
                   selected="All")
   	  }
     }
   )
+  
+  # Output type selection
+  output$typeSelection <- renderText({
+    if (values$data == 2) {
+      return(paste("Selected Type: ", input$typeInput))
+    } else {
+      return()
+    }
+  })
 	
   # Determine which graph display
   output$graph <- renderPlotly({
@@ -256,6 +266,7 @@ shinyServer(function(input, output, session) {
 	    # Genre Bar Graph
 		  genresBar <- netflixListedIn
     
+		  req(input$ageGroupInput)
   		if (input$ageGroupInput != "All") {
   		  genresBar <- netflixListedIn %>% filter(age_group == input$ageGroupInput)
   		}
@@ -275,28 +286,31 @@ shinyServer(function(input, output, session) {
 	  } else if (values$data == 2) {
 	    typePie <- netflixListedIn
 	    
+	    req(input$ageGroupInput)
 	    if (input$ageGroupInput != "All") {
 	      typePie <- typePie %>% filter(age_group == input$ageGroupInput)
 	    }
 	    
 	    pie <- na.omit(typePie) %>% count(type)
-	    print(pie)
-	    
+
 	    newPie <- plot_ly(pie, labels=~type, values=~n, type="pie", height=450)
 	    newPie <- newPie %>% layout(title="Proportion of Movies and TV Shows", margin=list(l = 50, r = 50, b = 20, t = 50))
 	  } else if (values$data == 3) {
       bubbleMap <- netflixListedIn
 		 
+      req(input$ageGroupInput)
       if (input$ageGroupInput != "All") {
        bubbleMap <- bubbleMap %>% filter(age_group == input$ageGroupInput)
       }
       
+      req(input$typeInput)
       if (input$typeInput == "Movie") {
         bubbleMap <- bubbleMap %>% filter(type == "Movie")
       } else {
         bubbleMap <- bubbleMap %>% filter(type == "TV Show")
       }
 			
+      req(input$genreInput)
 	    if (input$genreInput != "All"){
 	     bubbleMap <- bubbleMap %>% filter(listed_in == input$genreInput)
 	    } 
@@ -313,7 +327,7 @@ shinyServer(function(input, output, session) {
     		geom_polygon(data = world, aes(x=long, y = lat, group = group), fill="grey", alpha=0.3) +
     		geom_point(data=bubbleMap, aes(x=longitude, y=latitude, size=shows, color = continent,
     		                               text = paste("country: ", bubbleMap$country)))+
-    		theme(legend.title=element_blank(),plot.title = element_text(hjust = 0.5))+
+    		theme(legend.title=element_blank(), plot.title = element_text(hjust = 0.5))+
     		labs(y="Latitude", x = "Longitude")+
     		ggtitle("Number of Shows Available In Each Country")
   	  
@@ -321,43 +335,53 @@ shinyServer(function(input, output, session) {
 	  } else if (values$data == 4) {
 	    lineGraph <- netflixListedIn
 	    
+	    req(input$ageGroupInput)
 	    if (input$ageGroupInput != "All") {
 		    lineGraph <- lineGraph %>% filter(age_group == input$ageGroupInput)
 	    }
 	    
+	    req(input$typeInput)
 	    if (input$typeInput == "Movie") {
 	      lineGraph <- lineGraph %>% filter(type == "Movie")
 	    } else {
 	      lineGraph <- lineGraph %>% filter(type == "TV Show")
 	    }
 	    
+	    req(input$genreInput)
 	    if (input$genreInput != "All"){
 	      lineGraph <- lineGraph %>% filter(listed_in == input$genreInput)
 	    }
 			
+	    req(input$yearInput[1], input$yearInput[2])
       lineGraph <- lineGraph %>% filter(release_year >= input$yearInput[1])
       lineGraph <- lineGraph %>% filter(release_year <= input$yearInput[2])
 			
       lineGraph <- lineGraph %>% count(release_year, continent)	
-      lineGraph <- ggplot(data = lineGraph, aes(x=release_year, y=n, group=continent)) + geom_line(aes(color = continent)) + 
+      lineGraph <- ggplot(data = lineGraph, aes(x=release_year, y=n, group=continent, text=paste("Continent: ", continent,
+                                                                                                 "<br>Release Year: ", release_year,
+                                                                                                 "<br>Count: ", n))) + 
+        geom_line(aes(color = continent)) + 
        labs(x = "Release Year", y = "Number of Contents") + 
        ggtitle("Number of Contents Over the Years") + 
-       theme(plot.title = element_text(hjust = 0.5))
+       theme(plot.title = element_text(hjust = 0.5), legend.title=element_blank())
 		 	
-		  ggplotly(lineGraph, height=450) %>% layout(margin=list(l = 50, r = 50, b = 20, t = 50))	
+		  ggplotly(lineGraph, height=450, tooltip=c("text")) %>% layout(margin=list(l = 50, r = 50, b = 20, t = 50))	
 	  } else if (values$data == 5) {
 		  tableResult <- netflixListedIn
 		 
+		  req(input$ageGroupInput)
 	    if (input$ageGroupInput != "All") {
 		   tableResult <- tableResult %>% filter(age_group == input$ageGroupInput)
 	    }
 		  
+		  req(input$typeInput)
 		  if (input$typeInput == "Movie") {
 		    tableResult <- tableResult %>% filter(type == "Movie")
 		  } else {
 		    tableResult <- tableResult %>% filter(type == "TV Show")
 		  }
 		 
+		  req(input$genreInput)
 		  if (input$genreInput != "All") {
 		   tableResult <- tableResult %>% filter(listed_in == input$genreInput)
 		  }
@@ -365,6 +389,7 @@ shinyServer(function(input, output, session) {
 		  tableResult <- tableResult %>% filter(release_year >= input$yearInput[1])
 		  tableResult <- tableResult %>% filter(release_year <= input$yearInput[2])
 		
+		  req(input$countryInput)
   	  if (input$countryInput != "All") {
   		 tableResult <- tableResult %>% filter(country == input$countryInput)
   	  }
@@ -378,7 +403,7 @@ shinyServer(function(input, output, session) {
 		                 ), 
 		                 cells=list(
 		                   values=unname(tableResult),
-		                   align=c("center", "center", "left"),
+		                   align=c("center", "left"),
 		                   height=30
 		                )) %>% layout(margin=list(l = 50, r = 50, b = 20, t = 50))
 		  ggplotly(table)
