@@ -45,7 +45,7 @@ shinyUI(dashboardPage(
         fluidRow(
           withSpinner(infoBoxOutput("totalCountries"), color="red"),
           withSpinner(infoBoxOutput("totalContinent"), color="red"),
-		  withSpinner(infoBoxOutput("totalYear"), color="red")
+		      withSpinner(infoBoxOutput("totalYear"), color="red")
         ),
         br(),
         fluidRow(
@@ -56,31 +56,30 @@ shinyUI(dashboardPage(
 		tabItem(
 		  tabName="recommendation",
 		  fluidPage(
-		  introjsUI(),
-          tags$div(actionButton("help", "Take a Quick Tour",icon("question-circle"), style="color: #fff; background-color: #DD4B39")),
-		  br(),
+		    introjsUI(),
+        tags$div(actionButton("help", "Take a Quick Tour",icon("question-circle"), style="color: #fff; 
+                              background-color: #DD4B39")),
+		    br(),
   		  shinyjs::useShinyjs(),
   		  fluidRow(
   		    column(12, 
   		      introBox(box(width = NULL, status="danger", uiOutput("filter"), textOutput(outputId="typeSelection")),
-			  data.step = 1, 
-              data.intro = "Start by selecting your desired choice from the options provided."
-  		    ),
-  		      #box(textOutput(outputId="typeSelection"))
+			      data.step = 1, 
+            data.intro = "Start by selecting your desired choice from the options provided.")
   		    )
 		  ),
 		  br(),
 		  fluidRow(
 		    introBox(column(12, withSpinner(plotlyOutput(outputId="graph"), color='red')),
-			data.step = 2, 
-            data.intro = "Your selection will reflect the graph which shows you the suitable shows.")
+			  data.step = 2, 
+        data.intro = "Your selection will reflect in the graph which shows you the movies or TV shows that may suit you.")
 		  ),
 		  fluidRow(
 		    column(12,
 		    tags$div(style="margin-top: 6em; text-align: center;",
-		      introBox(actionGroupButtons(inputIds=c("btnB", "btnN"), labels=list("Previous", "Next"), status="danger", size="lg", fullwidth=TRUE),
+		    introBox(actionGroupButtons(inputIds=c("btnB", "btnN"), labels=list("Previous", "Next"), status="danger", size="lg", fullwidth=TRUE),
 			  data.step = 3, 
-              data.intro = "Confirm your selection by clicking 'Next'. Go back a step to edit your selection by clicking 'Previous'.")
+        data.intro = "Confirm your selection by clicking 'Next'. Go back a step to edit your selection by clicking 'Previous'.")
 			))
 		))),
 		tabItem(tabName="search", withSpinner(DT::dataTableOutput(outputId="netflixTable"), color="red")))

@@ -362,12 +362,11 @@ shinyServer(function(input, output, session) {
       lineGraph <- ggplot(data = lineGraph, aes(x=release_year, y=n, group=continent, text=paste("Continent: ", continent,
                                                                                                  "<br>Release Year: ", release_year,
                                                                                                  "<br>Count: ", n))) + 
-        geom_line(aes(color = continent)) + 
-       labs(x = "Release Year", y = "Number of Contents") + 
+      geom_line(aes(color = continent)) + labs(x = "Release Year", y = "Number of Contents") + 
        ggtitle("Number of Contents Over the Years") + 
        theme(plot.title = element_text(hjust = 0.5), legend.title=element_blank())
 		 	
-		  ggplotly(lineGraph, height=450, tooltip=c("text")) %>% layout(margin=list(l = 50, r = 50, b = 20, t = 50))	
+		  ggplotly(lineGraph, height=450, tooltip=c("text")) %>% layout(margin=list(l=50, r=50, b=20, t=50))	
 	  } else if (values$data == 5) {
 		  tableResult <- netflixListedIn
 		 
