@@ -56,23 +56,32 @@ shinyUI(dashboardPage(
 		tabItem(
 		  tabName="recommendation",
 		  fluidPage(
+		  introjsUI(),
+          tags$div(actionButton("help", "Take a Quick Tour",icon("question-circle"), style="color: #fff; background-color: #DD4B39")),
+		  br(),
   		  shinyjs::useShinyjs(),
   		  fluidRow(
   		    column(12, 
-  		      box(width = NULL, status="danger", uiOutput("filter"), textOutput(outputId="typeSelection")
+  		      introBox(box(width = NULL, status="danger", uiOutput("filter"), textOutput(outputId="typeSelection")),
+			  data.step = 1, 
+              data.intro = "Start by selecting your desired choice from the options provided."
   		    ),
   		      #box(textOutput(outputId="typeSelection"))
   		    )
 		  ),
 		  br(),
 		  fluidRow(
-		    column(12, withSpinner(plotlyOutput(outputId="graph"), color='red'))
+		    introBox(column(12, withSpinner(plotlyOutput(outputId="graph"), color='red')),
+			data.step = 2, 
+            data.intro = "Your selection will reflect the graph which shows you the suitable shows.")
 		  ),
 		  fluidRow(
 		    column(12,
 		    tags$div(style="margin-top: 6em; text-align: center;",
-		      actionGroupButtons(inputIds=c("btnB", "btnN"), labels=list("Previous", "Next"), status="danger", size="lg", fullwidth=TRUE)
-		    ))
+		      introBox(actionGroupButtons(inputIds=c("btnB", "btnN"), labels=list("Previous", "Next"), status="danger", size="lg", fullwidth=TRUE),
+			  data.step = 3, 
+              data.intro = "Confirm your selection by clicking 'Next'. Go back a step to edit your selection by clicking 'Previous'.")
+			))
 		))),
 		tabItem(tabName="search", withSpinner(DT::dataTableOutput(outputId="netflixTable"), color="red")))
   )

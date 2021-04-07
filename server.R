@@ -14,7 +14,6 @@ library(rnaturalearth)
 
 originalNetflix <- read.csv(file="netflix_titles.csv", na.strings=c("NA", ""), stringsAsFactors=F)
 map <- read.csv(file="map.csv")
-iso <- read.csv(file="iso.csv")
 
 # Tidy and enrich dataframes
 originalNetflix <- subset(originalNetflix, select=-c(show_id))
@@ -150,6 +149,9 @@ shinyServer(function(input, output, session) {
       "Total Year Involved", "97", icon=icon("history"), color="red"
     )
   })
+	
+	
+  observeEvent(input$help,introjs(session, options = list("showBullets"="false", "showProgress"="true", "showStepNumbers"="false","nextLabel"="Next","prevLabel"="Prev","skipLabel"="Skip")))
 	
   # Initialize a variable to count how many times "Next" is clicked.
   values <- reactiveValues(data = 1)
@@ -293,7 +295,7 @@ shinyServer(function(input, output, session) {
 	    
 	    pie <- na.omit(typePie) %>% count(type)
 
-	    newPie <- plot_ly(pie, labels=~type, values=~n, type="pie", height=450)
+	    newPie <- plot_ly(pie, labels=~type, values=~n, type="pie", height=450,marker = list(colors = c('#DD4B39', '#39CBDD')))
 	    newPie <- newPie %>% layout(title="Proportion of Movies and TV Shows", margin=list(l = 50, r = 50, b = 20, t = 50))
 	  } else if (values$data == 3) {
       bubbleMap <- netflixListedIn
@@ -399,7 +401,9 @@ shinyServer(function(input, output, session) {
 		  table <- plot_ly(type="table", height=450,
 		                 header=list(
 		                   values=c("<b>Title</b>", "<b>Description</b>"),
-		                   line=list(color = '#506784')
+		                   line=list(color = '#506784'),
+						   fill = list(color = c("#DD4B39", "#DD4B39")),
+						   font = list(family = "Arial", size = 14, color = "white")
 		                 ), 
 		                 cells=list(
 		                   values=unname(tableResult),
