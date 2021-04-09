@@ -277,7 +277,7 @@ shinyServer(function(input, output, session) {
   		newBar <- ggplot(genresBarS, aes(x=reorder(listed_in, -n), y=n, fill=listed_in, text=paste("Number of Contents: ", n, "<br>Genre: ", listed_in))) + 
   		  geom_bar(stat="identity", show.legend=FALSE) +
   		  scale_fill_brewer(palette="Dark2") +
-  		  labs(x="Genres", y="Number of Contents Contents", title="Most Popular Genres Based on Age Group") +
+  		  labs(x="Genres", y="Number of Contents", title="Most Popular Genres Based on Age Group") +
   		  theme(axis.text=element_text(size=10),
   				legend.position="none",
   				plot.title=element_text(size=13, hjust=0.5),
@@ -362,11 +362,12 @@ shinyServer(function(input, output, session) {
       lineGraph <- ggplot(data = lineGraph, aes(x=release_year, y=n, group=continent, text=paste("Continent: ", continent,
                                                                                                  "<br>Release Year: ", release_year,
                                                                                                  "<br>Count: ", n))) + 
-      geom_line(aes(color = continent)) + labs(x = "Release Year", y = "Number of Contents") + 
+        geom_line(aes(color = continent)) + 
+       labs(x = "Release Year", y = "Number of Contents") + 
        ggtitle("Number of Contents Over the Years") + 
        theme(plot.title = element_text(hjust = 0.5), legend.title=element_blank())
 		 	
-		  ggplotly(lineGraph, height=450, tooltip=c("text")) %>% layout(margin=list(l=50, r=50, b=20, t=50))	
+		  ggplotly(lineGraph, height=450, tooltip=c("text")) %>% layout(margin=list(l = 50, r = 50, b = 20, t = 50))	
 	  } else if (values$data == 5) {
 		  tableResult <- netflixListedIn
 		 
