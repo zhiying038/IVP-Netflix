@@ -146,7 +146,7 @@ shinyServer(function(input, output, session) {
   # Total Year
   output$totalYear <- renderInfoBox({
     infoBox(
-      "Total Year Involved", "97", icon=icon("history"), color="red"
+      "Total Years Involved", "97", icon=icon("history"), color="red"
     )
   })
 	

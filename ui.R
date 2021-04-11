@@ -29,7 +29,7 @@ shinyUI(dashboardPage(
         tabName="overview",
         HTML('<center><img src="netflix-logo.png" width="400"></center>'),
         br(),
-        h2("One of the Most Popular Content Platform in the World", style="text-align: center;"),
+        h2("One of the Most Popular Content Platforms in the World", style="text-align: center;"),
         br(),
 		fluidPage(
 		  HTML('<center><iframe width="560" height="315" src="https://www.youtube.com/embed/XL6zNexyt8o" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; 
